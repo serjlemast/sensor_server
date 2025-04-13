@@ -43,20 +43,6 @@ pip install --upgrade setuptools
 ```
 python main.py --type DHT --device-pin 17 --mock true --http-port 5000
 ```
-Flag	Description
---type	Sensor type: DHT or CCS
---device-pin	GPIO pin N used on the board
---mock	Whether to use mock data: true/false
---http-port	HTTP port to expose the server
-
-🌐 API Usage
-GET /sensor/data
-Returns the current sensor data with metadata.
-
-🔄 Example Request:
-```
-curl http://localhost:5000/sensor/data
-```
 
 Command-Line Flags
 
@@ -66,3 +52,12 @@ Command-Line Flags
 | --device-pin | GPIO pin number used (e.g., 17)                |
 | --mock       | Whether to use mock data (true or false)       |
 | --http-port  | HTTP port to expose the server (default: 5000) |
+
+🌐 API Usage
+GET /sensor/data
+Returns the current sensor data with metadata.
+
+🔄 Example Request:
+```
+curl http://localhost:5000/sensor/data
+```
