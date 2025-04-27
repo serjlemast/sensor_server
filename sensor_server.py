@@ -64,16 +64,16 @@ use_mock = True
 @app.route('/sensor/data', methods=['GET'])
 def get_sensor_data():
     if use_mock:
-        if sensor_type == "CCS":
+        if sensor_type == "CCS811":
             data = generate_mock_ccs811_data()
-        elif sensor_type == "DHT":
+        elif sensor_type == "DHT_11":
             data = generate_mock_dht11_data()
         else:
             return jsonify({"error": "Unknown sensor type"}), 400
     else:
-        if sensor_type == "DHT":
+        if sensor_type == "DHT_11":
             data = read_dht11_data(sensor_pin)
-        elif sensor_type == "CCS":
+        elif sensor_type == "CCS811":
             data = read_ccs811_data(sensor_pin)
         else:
             return jsonify({"error": "Unknown sensor type"}), 400
@@ -86,7 +86,7 @@ def get_sensor_data():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sensor REST API')
-    parser.add_argument('--type', required=True, choices=['DHT', 'CCS'], help='Sensor type (DHT or CCS)')
+    parser.add_argument('--type', required=True, choices=['DHT_11', 'CCS811'], help='Sensor type (DHT_11 or CCS811)')
     parser.add_argument('--device-pin', required=True, type=int, help='Device pin number (0-100)')
     parser.add_argument('--mock', required=True, type=lambda x: x.lower() == 'true', help='Use mock data (true/false)')
     parser.add_argument('--host', default='0.0.0.0', help='Host to run on')
