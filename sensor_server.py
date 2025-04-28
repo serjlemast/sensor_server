@@ -28,7 +28,7 @@ def read_dht11_data(pin):
     try:
         dht_device = adafruit_dht.DHT11(getattr(board, f"D{pin}"), use_pulseio=False)
         temperature_c = dht_device.temperature
-        temperature_f = temperature_c * (9 / 5) + 32
+        temperature_f = round(temperature_c * 9 / 5 + 32, 2)
         humidity = dht_device.humidity
 
         return {
