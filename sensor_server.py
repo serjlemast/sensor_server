@@ -28,8 +28,12 @@ def read_dht11_data(pin):
     try:
         dht_device = adafruit_dht.DHT11(getattr(board, f"D{pin}"), use_pulseio=False)
         temperature_c = dht_device.temperature
-        temperature_f = round(temperature_c * 9 / 5 + 32, 2)
         humidity = dht_device.humidity
+
+        if temperature_c is None or humidity is None:
+            return {"error": "Sensor returned None values"}
+
+        temperature_f = round(temperature_c * 9 / 5 + 32, 2)
 
         return {
             "temperature_celsius": temperature_c,
@@ -38,19 +42,9 @@ def read_dht11_data(pin):
         }
 
     except RuntimeError as error:
-        error_msg = str(error)
-        if "Checksum did not validate" in error_msg:
-            return {
-                "temperature_celsius": -80,
-                "temperature_fahrenheit": -80,
-                "humidity": -80
-            }
-        return {"error": error_msg}
-
+        return {"error": f"Runtime error: {str(error)}"}
     except Exception as error:
-        return {"error": "Unexpected error: " + str(error)}
-
-
+        return {"error": f"Unexpected error: {str(error)}"}
 
 # Real sensor reading function for CCS811 (placeholder)
 def read_ccs811_data(pin):
@@ -63,26 +57,44 @@ use_mock = True
 
 @app.route('/sensor/data', methods=['GET'])
 def get_sensor_data():
+    # Validate sensor type
+    if sensor_type not in ["DHT_11", "CCS811"]:
+        return jsonify({"error": "Unknown or unsupported sensor type"}), 400
+
+    # Use mock data if enabled
     if use_mock:
-        if sensor_type == "CCS811":
-            data = generate_mock_ccs811_data()
-        elif sensor_type == "DHT_11":
+        if sensor_type == "DHT_11":
             data = generate_mock_dht11_data()
-        else:
-            return jsonify({"error": "Unknown sensor type"}), 400
+        elif sensor_type == "CCS811":
+            data = generate_mock_ccs811_data()
     else:
+        # Read real sensor data
         if sensor_type == "DHT_11":
             data = read_dht11_data(sensor_pin)
         elif sensor_type == "CCS811":
             data = read_ccs811_data(sensor_pin)
-        else:
-            return jsonify({"error": "Unknown sensor type"}), 400
+
+        # Handle sensor read error
+        if isinstance(data, dict) and "error" in data:
+            return jsonify({
+                "type": sensor_type,
+                "device-pin": sensor_pin,
+                "error": data["error"]
+            }), 404  # Sensor read failed or data not found
+
+        # Validate data contents
+        if not data or any(value is None for value in data.values()):
+            return jsonify({
+                "type": sensor_type,
+                "device-pin": sensor_pin,
+                "error": "Incomplete or missing sensor data"
+            }), 400  # Bad data format
 
     return jsonify({
         "type": sensor_type,
         "device-pin": sensor_pin,
         "data": data
-    })
+    }), 200
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sensor REST API')
